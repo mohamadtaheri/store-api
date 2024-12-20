@@ -37,6 +37,9 @@ class Product(models.Model):
     def __repr__(self):
         return '<Product object ({}) "{}">'.format(self.id, self.name)
 
+
+
+
 class ShoppingCart(models.Model):
     TAX_RATE = 0.13
   
@@ -49,21 +52,22 @@ class ShoppingCart(models.Model):
     
     def subtotal(self):
         amount = 0.0
-        for item in self.shopping_cart_items:
-            amount += item.quantity * item.product.get_price()
+        shopping_cart_items = ShoppingCartItem.objects.filter(shopping_cart=self)
+        for item in shopping_cart_items:
+            amount += item.quantity * item.product.get_rounded_price()
         return round(amount, 2)
 
     def taxes(self):
         return round(self.TAX_RATE * self.subtotal(), 2)
 
     def total(self):
-        return round(self.subtotal() * self.taxes(), 2)
+        return round(self.subtotal() + self.taxes(), 2)
  
     def __repr__(self):
         name = self.name or '[Guest]'
         address = self.address or '[No Address]'
         return '<ShoppingCart object ({}) "{}" "{}">'.format(self.id, name, address)
-
+    
 class ShoppingCartItem(models.Model):
     shopping_cart = models.ForeignKey(ShoppingCart, related_name='items', related_query_name='item', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='+', on_delete=models.CASCADE)
