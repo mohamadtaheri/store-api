@@ -16,7 +16,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
     
-    
     def is_on_sale(self):
         now = timezone.now()
         if self.sale_start:
@@ -34,11 +33,9 @@ class Product(models.Model):
             return round(discounted_price, 2)
         return self.get_rounded_price()
 
+    
     def __repr__(self):
         return '<Product object ({}) "{}">'.format(self.id, self.name)
-
-
-
 
 class ShoppingCart(models.Model):
     TAX_RATE = 0.13
@@ -52,7 +49,7 @@ class ShoppingCart(models.Model):
     
     def subtotal(self):
         amount = 0.0
-        shopping_cart_items = ShoppingCartItem.objects.filter(shopping_cart=self)
+        shopping_cart_items = ShoppingCartItem.objects.filter(cart=self)
         for item in shopping_cart_items:
             amount += item.quantity * item.product.get_rounded_price()
         return round(amount, 2)
@@ -68,15 +65,19 @@ class ShoppingCart(models.Model):
         address = self.address or '[No Address]'
         return '<ShoppingCart object ({}) "{}" "{}">'.format(self.id, name, address)
     
+
 class ShoppingCartItem(models.Model):
-    shopping_cart = models.ForeignKey(ShoppingCart, related_name='items', related_query_name='item', on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, related_name='+', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='product', on_delete=models.CASCADE)
     quantity = models.IntegerField()
+    cart = models.ForeignKey(ShoppingCart, related_name='items', related_query_name='item', on_delete=models.CASCADE)
+    
+    
     def __str__(self):
-        return f'# {self.quantity} {self.product.name}'
+        return ' Shopping card({}) {}x "{}">'.format(self.cart, self.quantity, self.product.name)
     
     def total(self):
         return round(self.quantity * self.product.current_price())
 
     def __repr__(self):
         return '<ShoppingCartItem object ({}) {}x "{}">'.format(self.id, self.quantity, self.product.name)
+  

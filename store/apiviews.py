@@ -2,6 +2,7 @@ from rest_framework.generics import (
     ListAPIView,
     CreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    UpdateAPIView,
 )
 
 from rest_framework.validators import ValidationError
@@ -10,7 +11,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 
-from .serializers import ProductSerializer, ShoppingCartSerializer, CartItemSerializer
+from .serializers import (
+    ProductSerializer, 
+    ShoppingCartSerializer,
+    CartItemSerializer
+    
+    )
+
+from rest_framework.response import Response
+
 from .models import Product, ShoppingCart, ShoppingCartItem
 
 
@@ -108,45 +117,21 @@ class ProductRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
 class ShoppingCartList(ListAPIView):
     queryset = ShoppingCart.objects.all()
     serializer_class = ShoppingCartSerializer
-    
+    filter_backends = [DjangoFilterBackend,]
+    filterset_fields = ('id',)
+
+
 class ShoppingCartCreat(CreateAPIView):
     queryset = ShoppingCart.objects.all()
     serializer_class = ShoppingCartSerializer
     
-class ShoppingCartRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
-    queryset = ShoppingCart.objects.all()
-    serializer_class = ShoppingCartSerializer
+class ShoppingCartUpdateView(UpdateAPIView):
     lookup_field = 'id'
-    
-    def delete(self, request, *args, **kwargs):
-        id = request.data.get('id')
-        response =  super().delete(request, *args, **kwargs)
-        if response.status_code == 204:
-            from django.core.cache import cache
-            cache.delete(f'shoppoindcard_data_{id}')
-        return response
-    
-    def update(self, request, *args, **kwargs):
-        response =  super().update(request, *args, **kwargs)
-        if response.status_code == 200:
-            from django.core.cache import cache
-            card_set = {
-                "name": request.data['name'],
-                "address" : request.data['address']
-            }
-            cache.set(f'shoppoindcard_data_{request.data.get('id')}', card_set)
-        return response
-    
-    
-class CartItemList(ListAPIView):
-    queryset = ShoppingCartItem.objects.all()
-    serializer_class = CartItemSerializer
-    
-class CartItemCreate(CreateAPIView):
-    queryset = ShoppingCartItem.objects.all()
-    serializer_class = CartItemSerializer
-    
-class CartItemRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     queryset = ShoppingCart.objects.all()
-    serializer_class = ShoppingCartSerializer
-    lookup_field = 'id'
+    serializer_class = ShoppingCartSerializer 
+
+    
+
+
+
+    
